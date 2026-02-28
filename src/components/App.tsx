@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { TabId } from '../types';
 import { useTheme } from '../hooks/useTheme';
+import { useAppData } from '../hooks/useAppData';
 import { TabNav } from './TabNav';
 import { EmployeeList } from './employees/EmployeeList';
 import { ProjectList } from './projects/ProjectList';
@@ -9,6 +10,7 @@ import { ForecastView } from './forecast/ForecastView';
 export function App() {
   const [activeTab, setActiveTab] = useState<TabId>('forecast');
   const { theme, toggle } = useTheme();
+  const { loading, error } = useAppData();
 
   return (
     <div className="app">
@@ -36,9 +38,23 @@ export function App() {
         </button>
       </header>
       <main className="app-main">
-        {activeTab === 'employees' && <EmployeeList />}
-        {activeTab === 'projects' && <ProjectList />}
-        {activeTab === 'forecast' && <ForecastView />}
+        {loading ? (
+          <div className="app-loading">
+            <div className="spinner" />
+            <p>Data laden…</p>
+          </div>
+        ) : error ? (
+          <div className="app-error">
+            <p>Verbindingsfout met database:</p>
+            <code>{error}</code>
+          </div>
+        ) : (
+          <>
+            {activeTab === 'employees' && <EmployeeList />}
+            {activeTab === 'projects' && <ProjectList />}
+            {activeTab === 'forecast' && <ForecastView />}
+          </>
+        )}
       </main>
     </div>
   );

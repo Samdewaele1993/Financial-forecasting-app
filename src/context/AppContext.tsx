@@ -1,8 +1,10 @@
-import { createContext, useEffect, useReducer, type ReactNode } from 'react';
+import { createContext, useCallback, useEffect, useReducer, useState, type ReactNode } from 'react';
 import type { AppState, Employee, FixedProjectConfig, Project, TMEntry } from '../types';
-import { loadFromStorage, saveToStorage } from '../utils/storage';
+import { supabase } from '../lib/supabase';
+import { applyToSupabase, fetchAll } from '../lib/db';
 
-type Action =
+// ── Action types (exported so db.ts can import them) ─────────────────
+export type Action =
   | { type: 'ADD_EMPLOYEE'; payload: Employee }
   | { type: 'UPDATE_EMPLOYEE'; payload: Employee }
   | { type: 'DELETE_EMPLOYEE'; payload: string }
@@ -11,10 +13,16 @@ type Action =
   | { type: 'DELETE_PROJECT'; payload: string }
   | { type: 'SET_FIXED_CONFIG'; payload: FixedProjectConfig }
   | { type: 'UPSERT_TM_ENTRY'; payload: TMEntry }
-  | { type: 'DELETE_TM_ENTRY'; payload: { projectId: string; employeeId: string; month: string } };
+  | { type: 'DELETE_TM_ENTRY'; payload: { projectId: string; employeeId: string; month: string } }
+  | { type: 'SET_ALL'; payload: AppState };
+
+// ── Reducer ──────────────────────────────────────────────────────────
+const emptyState: AppState = { employees: [], projects: [], fixedConfigs: [], tmEntries: [] };
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
+    case 'SET_ALL':
+      return action.payload;
     case 'ADD_EMPLOYEE':
       return { ...state, employees: [...state.employees, action.payload] };
     case 'UPDATE_EMPLOYEE':
@@ -77,19 +85,75 @@ function reducer(state: AppState, action: Action): AppState {
   }
 }
 
+// ── Context ──────────────────────────────────────────────────────────
 export interface AppContextValue {
   state: AppState;
-  dispatch: React.Dispatch<Action>;
+  dispatch: (action: Action) => void;
+  loading: boolean;
+  error: string | null;
 }
 
 export const AppContext = createContext<AppContextValue | null>(null);
 
+// ── Provider ─────────────────────────────────────────────────────────
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, undefined, loadFromStorage);
+  const [state, internalDispatch] = useReducer(reducer, emptyState);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  // Initial load from Supabase
   useEffect(() => {
-    saveToStorage(state);
-  }, [state]);
+    fetchAll()
+      .then(data => {
+        internalDispatch({ type: 'SET_ALL', payload: data });
+        setLoading(false);
+      })
+      .catch(err => {
+        setError((err as Error).message);
+        setLoading(false);
+      });
+  }, []);
 
-  return <AppContext.Provider value={{ state, dispatch }}>{children}</AppContext.Provider>;
+  // Realtime: any change in Supabase → refetch all
+  useEffect(() => {
+    const channel = supabase
+      .channel('app-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'employees' }, () => {
+        fetchAll().then(data => internalDispatch({ type: 'SET_ALL', payload: data }));
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => {
+        fetchAll().then(data => internalDispatch({ type: 'SET_ALL', payload: data }));
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fixed_project_configs' }, () => {
+        fetchAll().then(data => internalDispatch({ type: 'SET_ALL', payload: data }));
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tm_entries' }, () => {
+        fetchAll().then(data => internalDispatch({ type: 'SET_ALL', payload: data }));
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  // Dispatch: optimistic local update + async Supabase mutation
+  const dispatch = useCallback((action: Action) => {
+    if (action.type === 'SET_ALL') {
+      internalDispatch(action);
+      return;
+    }
+    // Optimistic update — UI reacts instantly
+    internalDispatch(action);
+    // Persist to Supabase in background
+    applyToSupabase(action).catch(err => {
+      console.error('Supabase mutation failed:', err);
+      // Revert to server state on failure
+      fetchAll().then(data => internalDispatch({ type: 'SET_ALL', payload: data }));
+    });
+  }, []);
+
+  return (
+    <AppContext.Provider value={{ state, dispatch, loading, error }}>
+      {children}
+    </AppContext.Provider>
+  );
 }

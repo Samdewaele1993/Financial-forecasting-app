@@ -10,6 +10,8 @@ export interface Project {
   id: string;
   name: string;
   type: 'fixed' | 'tm';
+  clientName?: string;
+  status: 'gepland' | 'actief' | 'afgerond';
 }
 
 export interface FixedProjectConfig {

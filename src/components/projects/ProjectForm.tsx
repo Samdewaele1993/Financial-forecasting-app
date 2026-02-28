@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import type { Employee, FixedProjectConfig, Project, TMEntry } from '../../types';
 
+const STATUS_LABELS: Record<Project['status'], string> = {
+  gepland: 'Gepland',
+  actief: 'Actief',
+  afgerond: 'Afgerond',
+};
+
 interface ProjectFormProps {
   initialProject?: Project;
   initialFixedConfig?: FixedProjectConfig;
@@ -32,6 +38,8 @@ export function ProjectForm({
   onCancel,
 }: ProjectFormProps) {
   const [name, setName] = useState(initialProject?.name ?? '');
+  const [clientName, setClientName] = useState(initialProject?.clientName ?? '');
+  const [status, setStatus] = useState<Project['status']>(initialProject?.status ?? 'actief');
   const [type, setType] = useState<'fixed' | 'tm'>(initialProject?.type ?? 'fixed');
 
   // Fixed fields
@@ -94,7 +102,13 @@ export function ProjectForm({
     if (!name.trim()) { setError('Geef een projectnaam in.'); return; }
 
     const projectId = initialProject?.id ?? crypto.randomUUID();
-    const project: Project = { id: projectId, name: name.trim(), type };
+    const project: Project = {
+      id: projectId,
+      name: name.trim(),
+      type,
+      status,
+      ...(clientName.trim() ? { clientName: clientName.trim() } : {}),
+    };
 
     if (type === 'fixed') {
       const priceNum = parseFloat(price);
@@ -130,28 +144,44 @@ export function ProjectForm({
       <h3 className="form-title">{initialProject ? 'Project bewerken' : 'Project toevoegen'}</h3>
       {error && <p className="form-error">{error}</p>}
 
-      <div className="form-group">
-        <label className="form-label">Projectnaam</label>
-        <input className="form-input" value={name} onChange={e => setName(e.target.value)} placeholder="Klantproject XYZ" />
+      <div className="form-row">
+        <div className="form-group">
+          <label className="form-label">Projectnaam</label>
+          <input className="form-input" value={name} onChange={e => setName(e.target.value)} placeholder="Klantproject XYZ" />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Klantnaam (optioneel)</label>
+          <input className="form-input" value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Acme NV" />
+        </div>
       </div>
 
-      <div className="form-group">
-        <label className="form-label">Type</label>
-        <div className="type-toggle">
-          <button
-            type="button"
-            className={`toggle-btn${type === 'fixed' ? ' active' : ''}`}
-            onClick={() => setType('fixed')}
-          >
-            Fixed Price
-          </button>
-          <button
-            type="button"
-            className={`toggle-btn${type === 'tm' ? ' active' : ''}`}
-            onClick={() => setType('tm')}
-          >
-            T&amp;M
-          </button>
+      <div className="form-row">
+        <div className="form-group">
+          <label className="form-label">Status</label>
+          <select className="form-input" value={status} onChange={e => setStatus(e.target.value as Project['status'])}>
+            {(Object.keys(STATUS_LABELS) as Project['status'][]).map(s => (
+              <option key={s} value={s}>{STATUS_LABELS[s]}</option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Type</label>
+          <div className="type-toggle">
+            <button
+              type="button"
+              className={`toggle-btn${type === 'fixed' ? ' active' : ''}`}
+              onClick={() => setType('fixed')}
+            >
+              Fixed Price
+            </button>
+            <button
+              type="button"
+              className={`toggle-btn${type === 'tm' ? ' active' : ''}`}
+              onClick={() => setType('tm')}
+            >
+              T&amp;M
+            </button>
+          </div>
         </div>
       </div>
 

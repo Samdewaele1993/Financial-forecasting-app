@@ -6,9 +6,9 @@ interface TabNavProps {
 }
 
 const TABS: { id: TabId; label: string }[] = [
+  { id: 'forecast', label: 'Forecast' },
   { id: 'employees', label: 'Medewerkers' },
   { id: 'projects', label: 'Projecten' },
-  { id: 'forecast', label: 'Forecast' },
 ];
 
 export function TabNav({ activeTab, onTabChange }: TabNavProps) {

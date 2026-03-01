@@ -15,6 +15,7 @@ export function EmployeeCard({ employee, onEdit, onDelete }: EmployeeCardProps) 
 
   return (
     <div className="card">
+      <div className="card-avatar" aria-hidden="true">{employee.name.charAt(0)}</div>
       <div className="card-info">
         <span className="card-name">{employee.name}</span>
         <span className="card-sub">{employee.title}</span>

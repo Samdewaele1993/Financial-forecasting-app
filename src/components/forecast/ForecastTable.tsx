@@ -41,7 +41,7 @@ export function ForecastTable({ result }: ForecastTableProps) {
         <tbody>
           {rows.map(row => (
             <>
-              <tr key={`${row.employeeId}-rev`}>
+              <tr key={`${row.employeeId}-rev`} className="group-start">
                 <td className="sticky-col employee-cell" rowSpan={4}>
                   <span className="emp-name">{row.employeeName}</span>
                 </td>

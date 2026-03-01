@@ -31,6 +31,7 @@ export function App() {
   return (
     <div className="app">
       <header className="app-header">
+        <div className="header-gradient-bar" aria-hidden="true" />
         <button
           className="logo-btn"
           onClick={() => setActiveTab('forecast')}
@@ -44,22 +45,24 @@ export function App() {
           />
         </button>
         <TabNav activeTab={activeTab} onTabChange={setActiveTab} />
-        <button
-          className="theme-toggle"
-          onClick={toggle}
-          title={theme === 'light' ? 'Schakel naar donker thema' : 'Schakel naar licht thema'}
-          aria-label="Thema wisselen"
-        >
-          {theme === 'light' ? '🌙' : '☀️'}
-        </button>
-        <button
-          className="logout-btn"
-          onClick={() => supabase.auth.signOut()}
-          title="Afmelden"
-          aria-label="Afmelden"
-        >
-          Afmelden
-        </button>
+        <div className="header-actions">
+          <button
+            className="theme-toggle"
+            onClick={toggle}
+            title={theme === 'light' ? 'Schakel naar donker thema' : 'Schakel naar licht thema'}
+            aria-label="Thema wisselen"
+          >
+            {theme === 'light' ? '🌙' : '☀️'}
+          </button>
+          <button
+            className="logout-btn"
+            onClick={() => supabase.auth.signOut()}
+            title="Afmelden"
+            aria-label="Afmelden"
+          >
+            Afmelden
+          </button>
+        </div>
       </header>
       <main className="app-main">
         {loading ? (

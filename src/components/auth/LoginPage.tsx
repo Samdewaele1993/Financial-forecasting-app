@@ -48,6 +48,8 @@ export function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-card">
+        <div className="login-brand" aria-hidden="true" />
+        <div className="login-content">
         <img
           src="/logo-ntx.svg"
           alt="NTX"
@@ -102,6 +104,7 @@ export function LoginPage() {
             </button>
           </form>
         )}
+        </div>
       </div>
     </div>
   );

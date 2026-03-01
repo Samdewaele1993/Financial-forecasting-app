@@ -162,7 +162,7 @@ export function ForecastView() {
         <>
           {result.warnings.length > 0 && (
             <div className="warnings-panel">
-              <span className="warnings-title">Overbelasting gedetecteerd</span>
+              <span className="warnings-title"><span className="warnings-icon" aria-hidden="true">⚠</span> Overbelasting gedetecteerd</span>
               <ul className="warnings-list">
                 {result.warnings.map((w, i) => (
                   <li key={i}>

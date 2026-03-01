@@ -27,7 +27,7 @@ export function ProjectCard({ project, config, tmEntries, employees, onEdit, onD
   }
 
   return (
-    <div className="card">
+    <div className="card" data-status={project.status}>
       <div className="card-info">
         <div className="card-name-row">
           <span className="card-name">{project.name}</span>

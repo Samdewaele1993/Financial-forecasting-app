@@ -1,16 +1,32 @@
 import { useState } from 'react';
 import type { TabId } from '../types';
 import { useTheme } from '../hooks/useTheme';
+import { useAuth } from '../hooks/useAuth';
 import { useAppData } from '../hooks/useAppData';
 import { TabNav } from './TabNav';
 import { EmployeeList } from './employees/EmployeeList';
 import { ProjectList } from './projects/ProjectList';
 import { ForecastView } from './forecast/ForecastView';
+import { LoginPage } from './auth/LoginPage';
+import { supabase } from '../lib/supabase';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabId>('forecast');
   const { theme, toggle } = useTheme();
+  const { session, loading: authLoading } = useAuth();
   const { loading, error } = useAppData();
+
+  if (authLoading) {
+    return (
+      <div className="app-loading">
+        <div className="spinner" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <LoginPage />;
+  }
 
   return (
     <div className="app">
@@ -35,6 +51,14 @@ export function App() {
           aria-label="Thema wisselen"
         >
           {theme === 'light' ? '🌙' : '☀️'}
+        </button>
+        <button
+          className="logout-btn"
+          onClick={() => supabase.auth.signOut()}
+          title="Afmelden"
+          aria-label="Afmelden"
+        >
+          Afmelden
         </button>
       </header>
       <main className="app-main">

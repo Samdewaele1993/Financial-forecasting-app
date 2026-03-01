@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
+
+const RESET_COOLDOWN_SECONDS = 60;
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -7,6 +9,8 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
+  const [resetCooldown, setResetCooldown] = useState(0);
+  const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,16 +28,28 @@ export function LoginPage() {
       setError('Vul eerst je e-mailadres in.');
       return;
     }
+    if (resetCooldown > 0) return;
     setError(null);
     await supabase.auth.resetPasswordForEmail(email);
     setResetSent(true);
+
+    setResetCooldown(RESET_COOLDOWN_SECONDS);
+    cooldownTimer.current = setInterval(() => {
+      setResetCooldown(prev => {
+        if (prev <= 1) {
+          clearInterval(cooldownTimer.current!);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   }
 
   return (
     <div className="login-page">
       <div className="login-card">
         <img
-          src="https://ntx.be/wp-content/uploads/2025/08/logo-ntx.svg"
+          src="/logo-ntx.svg"
           alt="NTX"
           className="login-logo"
         />
@@ -80,8 +96,9 @@ export function LoginPage() {
               type="button"
               className="login-reset-link"
               onClick={handleReset}
+              disabled={resetCooldown > 0}
             >
-              Wachtwoord vergeten?
+              {resetCooldown > 0 ? `Wachtwoord vergeten? (${resetCooldown}s)` : 'Wachtwoord vergeten?'}
             </button>
           </form>
         )}

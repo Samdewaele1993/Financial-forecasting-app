@@ -45,11 +45,11 @@ export function EmployeeForm({ initialValues, onSave, onCancel }: EmployeeFormPr
       {error && <p className="form-error">{error}</p>}
       <div className="form-group">
         <label className="form-label">Naam</label>
-        <input className="form-input" value={name} onChange={e => setName(e.target.value)} placeholder="Jan Janssen" />
+        <input className="form-input" value={name} onChange={e => setName(e.target.value)} placeholder="Jan Janssen" maxLength={100} />
       </div>
       <div className="form-group">
         <label className="form-label">Titel</label>
-        <input className="form-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Developer" />
+        <input className="form-input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Developer" maxLength={100} />
       </div>
       <div className="form-row">
         <div className="form-group">
@@ -58,6 +58,7 @@ export function EmployeeForm({ initialValues, onSave, onCancel }: EmployeeFormPr
             className="form-input"
             type="number"
             min="0"
+            max="999999"
             step="0.01"
             value={monthlyCost}
             onChange={e => setMonthlyCost(e.target.value)}
@@ -70,6 +71,7 @@ export function EmployeeForm({ initialValues, onSave, onCancel }: EmployeeFormPr
             className="form-input"
             type="number"
             min="0"
+            max="744"
             step="0.5"
             value={capacityHours}
             onChange={e => setCapacityHours(e.target.value)}

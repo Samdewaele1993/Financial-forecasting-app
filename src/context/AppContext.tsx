@@ -145,7 +145,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     internalDispatch(action);
     // Persist to Supabase in background
     applyToSupabase(action).catch(err => {
-      console.error('Supabase mutation failed:', err);
+      if (import.meta.env.DEV) console.error('Supabase mutation failed:', err);
       // Revert to server state on failure
       fetchAll().then(data => internalDispatch({ type: 'SET_ALL', payload: data }));
     });

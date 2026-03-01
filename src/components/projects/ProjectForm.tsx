@@ -147,11 +147,11 @@ export function ProjectForm({
       <div className="form-row">
         <div className="form-group">
           <label className="form-label">Projectnaam</label>
-          <input className="form-input" value={name} onChange={e => setName(e.target.value)} placeholder="Klantproject XYZ" />
+          <input className="form-input" value={name} onChange={e => setName(e.target.value)} placeholder="Klantproject XYZ" maxLength={150} />
         </div>
         <div className="form-group">
           <label className="form-label">Klantnaam (optioneel)</label>
-          <input className="form-input" value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Acme NV" />
+          <input className="form-input" value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Acme NV" maxLength={150} />
         </div>
       </div>
 
@@ -193,6 +193,7 @@ export function ProjectForm({
               className="form-input"
               type="number"
               min="0"
+              max="99999999"
               step="0.01"
               value={price}
               onChange={e => setPrice(e.target.value)}
@@ -215,6 +216,7 @@ export function ProjectForm({
                 className="form-input"
                 type="number"
                 min="1"
+                max="120"
                 step="1"
                 value={durationMonths}
                 onChange={e => setDurationMonths(e.target.value)}
@@ -246,6 +248,7 @@ export function ProjectForm({
               className="form-input"
               type="number"
               min="0"
+              max="99999"
               step="0.5"
               value={estimatedHours}
               onChange={e => setEstimatedHours(e.target.value)}
@@ -311,6 +314,7 @@ export function ProjectForm({
                           className="form-input"
                           type="number"
                           min="0"
+                          max="744"
                           step="0.5"
                           value={row.hours}
                           onChange={e => updateTmRow(row.key, 'hours', e.target.value)}
@@ -322,6 +326,7 @@ export function ProjectForm({
                           className="form-input"
                           type="number"
                           min="0"
+                          max="9999"
                           step="0.01"
                           value={row.hourlyRate}
                           onChange={e => updateTmRow(row.key, 'hourlyRate', e.target.value)}

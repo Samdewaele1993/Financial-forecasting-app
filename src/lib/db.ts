@@ -117,72 +117,93 @@ export async function fetchAll(): Promise<AppState> {
 
 // ── Apply action to Supabase ─────────────────────────────────────────
 
+function throwIfError(error: { message: string } | null, context: string): void {
+  if (error) throw new Error(`[${context}] ${error.message}`);
+}
+
 export async function applyToSupabase(action: Action): Promise<void> {
   switch (action.type) {
 
-    case 'ADD_EMPLOYEE':
-      await supabase.from('employees').insert(employeeToRow(action.payload));
+    case 'ADD_EMPLOYEE': {
+      const { error } = await supabase.from('employees').insert(employeeToRow(action.payload));
+      throwIfError(error, 'ADD_EMPLOYEE');
       break;
+    }
 
-    case 'UPDATE_EMPLOYEE':
-      await supabase.from('employees')
+    case 'UPDATE_EMPLOYEE': {
+      const { error } = await supabase.from('employees')
         .update(employeeToRow(action.payload))
         .eq('id', action.payload.id);
+      throwIfError(error, 'UPDATE_EMPLOYEE');
       break;
+    }
 
     case 'DELETE_EMPLOYEE': {
       const id = action.payload;
-      // Delete T&M entries for this employee
-      await supabase.from('tm_entries').delete().eq('employee_id', id);
-      // Remove from fixed config arrays
-      const { data: configs } = await supabase
+      const { error: e1 } = await supabase.from('tm_entries').delete().eq('employee_id', id);
+      throwIfError(e1, 'DELETE_EMPLOYEE:tm_entries');
+      const { data: configs, error: e2 } = await supabase
         .from('fixed_project_configs')
         .select('project_id, assigned_employee_ids');
+      throwIfError(e2, 'DELETE_EMPLOYEE:fetch_configs');
       if (configs) {
         for (const cfg of configs as FixedConfigRow[]) {
           const updated = cfg.assigned_employee_ids.filter(eid => eid !== id);
           if (updated.length !== cfg.assigned_employee_ids.length) {
-            await supabase.from('fixed_project_configs')
+            const { error: e3 } = await supabase.from('fixed_project_configs')
               .update({ assigned_employee_ids: updated })
               .eq('project_id', cfg.project_id);
+            throwIfError(e3, 'DELETE_EMPLOYEE:update_config');
           }
         }
       }
-      await supabase.from('employees').delete().eq('id', id);
+      const { error: e4 } = await supabase.from('employees').delete().eq('id', id);
+      throwIfError(e4, 'DELETE_EMPLOYEE:employees');
       break;
     }
 
-    case 'ADD_PROJECT':
-      await supabase.from('projects').insert(projectToRow(action.payload));
+    case 'ADD_PROJECT': {
+      const { error } = await supabase.from('projects').insert(projectToRow(action.payload));
+      throwIfError(error, 'ADD_PROJECT');
       break;
+    }
 
-    case 'UPDATE_PROJECT':
-      await supabase.from('projects')
+    case 'UPDATE_PROJECT': {
+      const { error } = await supabase.from('projects')
         .update(projectToRow(action.payload))
         .eq('id', action.payload.id);
+      throwIfError(error, 'UPDATE_PROJECT');
       break;
+    }
 
-    case 'DELETE_PROJECT':
+    case 'DELETE_PROJECT': {
       // fixed_project_configs and tm_entries cascade via FK
-      await supabase.from('projects').delete().eq('id', action.payload);
+      const { error } = await supabase.from('projects').delete().eq('id', action.payload);
+      throwIfError(error, 'DELETE_PROJECT');
       break;
+    }
 
-    case 'SET_FIXED_CONFIG':
-      await supabase.from('fixed_project_configs')
+    case 'SET_FIXED_CONFIG': {
+      const { error } = await supabase.from('fixed_project_configs')
         .upsert(fixedConfigToRow(action.payload), { onConflict: 'project_id' });
+      throwIfError(error, 'SET_FIXED_CONFIG');
       break;
+    }
 
-    case 'UPSERT_TM_ENTRY':
-      await supabase.from('tm_entries')
+    case 'UPSERT_TM_ENTRY': {
+      const { error } = await supabase.from('tm_entries')
         .upsert(tmEntryToRow(action.payload), { onConflict: 'project_id,employee_id,month' });
+      throwIfError(error, 'UPSERT_TM_ENTRY');
       break;
+    }
 
     case 'DELETE_TM_ENTRY': {
       const { projectId, employeeId, month } = action.payload;
-      await supabase.from('tm_entries').delete()
+      const { error } = await supabase.from('tm_entries').delete()
         .eq('project_id', projectId)
         .eq('employee_id', employeeId)
         .eq('month', month);
+      throwIfError(error, 'DELETE_TM_ENTRY');
       break;
     }
 

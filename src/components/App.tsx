@@ -38,7 +38,7 @@ export function App() {
           aria-label="Home — Forecast"
         >
           <img
-            src="https://ntx.be/wp-content/uploads/2025/08/logo-ntx.svg"
+            src="/logo-ntx.svg"
             alt="NTX"
             className="app-logo"
           />
@@ -69,8 +69,7 @@ export function App() {
           </div>
         ) : error ? (
           <div className="app-error">
-            <p>Verbindingsfout met database:</p>
-            <code>{error}</code>
+            <p>Er is een fout opgetreden bij het laden van de data. Probeer de pagina te vernieuwen.</p>
           </div>
         ) : (
           <>
